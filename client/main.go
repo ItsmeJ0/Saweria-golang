@@ -43,22 +43,22 @@ func main() {
 		fmt.Println("1. Donasi")
 		fmt.Println("2. Keluar")
 		fmt.Print("Masukkan pilihan Anda: ")
-		choice, _ := reader.ReadString('\n') // Membaca pilihan pengguna
-		choice = strings.TrimSpace(choice)   // Menghapus spasi di awal/akhir string
+		pilihan, _ := reader.ReadString('\n') // Membaca pilihan pengguna
+		pilihan = strings.TrimSpace(pilihan)  // Menghapus spasi di awal/akhir string
 
-		switch choice { // Memeriksa input pilihan pengguna
+		switch pilihan { // Memeriksa input pilihan pengguna
 		case "1":
 			fmt.Print("Masukkan jumlah donasi: ")
-			amount, _ := reader.ReadString('\n') // Membaca input jumlah donasi
-			amount = strings.TrimSpace(amount)   // Menghapus spasi di awal/akhir string
+			jumlahDonasi, _ := reader.ReadString('\n')     // Membaca input jumlah donasi
+			jumlahDonasi = strings.TrimSpace(jumlahDonasi) // Menghapus spasi di awal/akhir string
 
 			fmt.Print("Masukkan pesan untuk donasi Anda: ")
 			message, _ := reader.ReadString('\n') // Membaca input pesan donasi
 			message = strings.TrimSpace(message)  // Menghapus spasi di awal/akhir string
 
 			// Mengirim pesan donasi ke server dalam format "DONATE <nama> <jumlah> <pesan>"
-			donateMessage := fmt.Sprintf("DONATE %s %s %s", name, amount, message)
-			_, err = conn.Write([]byte(donateMessage)) // Mengirim data ke server
+			pesanDonasi := fmt.Sprintf("DONATE %s %s %s", name, jumlahDonasi, message)
+			_, err = conn.Write([]byte(pesanDonasi)) // Mengirim data ke server
 			if err != nil {
 				fmt.Println("Error saat mengirim donasi:", err) // Menampilkan error jika pengiriman gagal
 			} else {
