@@ -31,10 +31,10 @@ func main() {
 	amount = strings.TrimSpace(amount)   // Menghapus spasi atau newline di awal/akhir input
 
 	// Membuat pesan top up dengan format "nama jumlah"
-	topUpMessage := name + " " + amount
+	pesanTopUp := name + " " + amount
 
 	// Mengirim pesan top up ke server
-	_, err = conn.Write([]byte(topUpMessage))
+	_, err = conn.Write([]byte(pesanTopUp))
 	if err != nil {
 		fmt.Println("Error saat mengirim top up:", err) // Menampilkan pesan kesalahan jika pengiriman gagal
 	} else {
