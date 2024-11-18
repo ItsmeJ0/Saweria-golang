@@ -59,7 +59,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 }
 
 // Fungsi untuk menangani koneksi UDP
-func handleUDPConnection(conn *net.UDPConn) {
+func prosesClientUDP(conn *net.UDPConn) {
 	buffer := make([]byte, 1024) // Buffer untuk menerima data
 	for {
 		n, _, err := conn.ReadFromUDP(buffer) // Membaca data dari koneksi UDP
@@ -90,7 +90,7 @@ func handleUDPConnection(conn *net.UDPConn) {
 
 		case "DONATE":
 			sender := commands[1]
-			amount, err := strconv.Atoi(commands[2]) // Mengonversi jumlah donasi ke int
+			jumlahDonasi, err := strconv.Atoi(commands[2]) // Mengonversi jumlah donasi ke int
 			if err != nil {
 				fmt.Println("Jumlah donasi tidak valid.")
 				continue
@@ -103,10 +103,10 @@ func handleUDPConnection(conn *net.UDPConn) {
 
 			mutex.Lock()
 			if user, exists := users[sender]; exists {
-				if user.Saldo >= amount {
-					user.Saldo -= amount // Mengurangi saldo pengguna
-					fmt.Printf("%s mendonasikan %d. Pesan: \"%s\". Saldo sekarang: %d\n", sender, amount, donationMessage, user.Saldo)
-					broadcastMessage(fmt.Sprintf("%s mendonasikan %d. Pesan: \"%s\"", sender, amount, donationMessage))
+				if user.Saldo >= jumlahDonasi {
+					user.Saldo -= jumlahDonasi // Mengurangi saldo pengguna
+					fmt.Printf("%s mendonasikan %d. Pesan: \"%s\". Saldo sekarang: %d\n", sender, jumlahDonasi, donationMessage, user.Saldo)
+					broadcastMessage(fmt.Sprintf("%s mendonasikan %d. Pesan: \"%s\"", sender, jumlahDonasi, donationMessage))
 				} else {
 					fmt.Printf("Saldo %s tidak mencukupi untuk donasi.\n", sender)
 				}
@@ -120,7 +120,7 @@ func handleUDPConnection(conn *net.UDPConn) {
 }
 
 // Fungsi untuk menangani koneksi TCP
-func handleTCPConnection(conn net.Conn) {
+func prosesTopUpTCP(conn net.Conn) {
 	defer conn.Close()
 
 	buffer := make([]byte, 1024)
@@ -138,7 +138,7 @@ func handleTCPConnection(conn net.Conn) {
 	}
 
 	name := commands[0]
-	amount, err := strconv.Atoi(commands[1]) // Mengonversi jumlah top up ke int
+	jumlahDonasi, err := strconv.Atoi(commands[1]) // Mengonversi jumlah top up ke int
 	if err != nil {
 		fmt.Println("Jumlah top up tidak valid.")
 		return
@@ -146,8 +146,8 @@ func handleTCPConnection(conn net.Conn) {
 
 	mutex.Lock()
 	if user, exists := users[name]; exists {
-		user.Saldo += amount // Menambah saldo pengguna
-		fmt.Printf("Saldo %s ditambahkan %d. Saldo sekarang: %d.\n", name, amount, user.Saldo)
+		user.Saldo += jumlahDonasi // Menambah saldo pengguna
+		fmt.Printf("Saldo %s ditambahkan %d. Saldo sekarang: %d.\n", name, jumlahDonasi, user.Saldo)
 	} else {
 		fmt.Printf("Pengguna %s tidak ditemukan.\n", name)
 	}
@@ -175,7 +175,7 @@ func main() {
 		return
 	}
 	defer udpConn.Close()
-	go handleUDPConnection(udpConn)
+	go prosesClientUDP(udpConn)
 
 	// Setup TCP
 	tcpAddr, _ := net.ResolveTCPAddr("tcp", "127.0.0.1:8081")
@@ -192,6 +192,6 @@ func main() {
 			fmt.Println("Error saat menerima koneksi TCP:", err)
 			continue
 		}
-		go handleTCPConnection(tcpConn) // Menangani koneksi dalam goroutine baru
+		go prosesTopUpTCP(tcpConn) // Menangani koneksi dalam goroutine baru
 	}
 }
