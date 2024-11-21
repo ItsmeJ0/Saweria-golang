@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -19,7 +18,6 @@ type User struct {
 
 var (
 	users    = make(map[string]*User)         // Peta untuk menyimpan data pengguna
-	mutex    = &sync.Mutex{}                  // Mutex untuk menghindari kondisi balapan saat mengakses peta pengguna
 	clients  = make(map[*websocket.Conn]bool) // Peta untuk menyimpan koneksi WebSocket
 	upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -79,14 +77,12 @@ func prosesClientUDP(conn *net.UDPConn) {
 		case "REGISTER":
 			name := commands[1]
 
-			mutex.Lock() // Mengunci untuk menghindari race condition
 			if _, exists := users[name]; !exists {
 				users[name] = &User{Name: name, Saldo: 0} // Menambahkan pengguna baru
 				fmt.Printf("Pengguna %s terdaftar dengan saldo 0.\n", name)
 			} else {
 				fmt.Printf("Pengguna %s sudah terdaftar.\n", name)
 			}
-			mutex.Unlock()
 
 		case "DONATE":
 			sender := commands[1]
@@ -101,7 +97,6 @@ func prosesClientUDP(conn *net.UDPConn) {
 				donationMessage = strings.Join(commands[3:], " ") // Menggabungkan pesan donasi
 			}
 
-			mutex.Lock()
 			if user, exists := users[sender]; exists {
 				if user.Saldo >= jumlahDonasi {
 					user.Saldo -= jumlahDonasi // Mengurangi saldo pengguna
@@ -113,8 +108,6 @@ func prosesClientUDP(conn *net.UDPConn) {
 			} else {
 				fmt.Printf("Pengguna %s tidak ditemukan.\n", sender)
 			}
-
-			mutex.Unlock()
 		}
 	}
 }
@@ -144,14 +137,12 @@ func prosesTopUpTCP(conn net.Conn) {
 		return
 	}
 
-	mutex.Lock()
 	if user, exists := users[name]; exists {
 		user.Saldo += jumlahDonasi // Menambah saldo pengguna
 		fmt.Printf("Saldo %s ditambahkan %d. Saldo sekarang: %d.\n", name, jumlahDonasi, user.Saldo)
 	} else {
 		fmt.Printf("Pengguna %s tidak ditemukan.\n", name)
 	}
-	mutex.Unlock()
 }
 
 func main() {
